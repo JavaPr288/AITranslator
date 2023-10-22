@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import "./App.css";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from 'openai';
 import { BeatLoader } from "react-spinners";
 
 const App = () => {
-  const [formData, setFormData] = useState({ language: "Hindi", message: "" });
+  const [formData, setFormData] = useState({ language: "french", message: "" });
   const [error, setError] = useState("");
   const [showNotification, setShowNotification] = useState(false);
   const [translation, setTranslation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const configuration = new Configuration({
-    apiKey: import.meta.env.VITE_OPENAI_KEY,
+
+  const openai = new OpenAI({
+    apiKey: import.meta.env.VITE_OPENAI_KEY, // defaults to process.env["OPENAI_API_KEY"] can hardcode as well
+    dangerouslyAllowBrowser: true
   });
-  const openai = new OpenAIApi(configuration);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,17 +23,17 @@ const App = () => {
 
   const translate = async () => {
     const { language, message } = formData;
-    const response = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: `Translate this into ${language}: ${message}`,
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: 'user', content: `Translate as concisely as possible this into ${language}: ${message}`}],      
       temperature: 0.3,
       max_tokens: 100,
       top_p: 1.0,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
     });
-
-    const translatedText = response.data.choices[0].text.trim();
+    console.log(response.choices[0].message.content);
+    const translatedText = response.choices[0].message.content.trim();
     setIsLoading(false);
     setTranslation(translatedText);
   };
@@ -69,13 +70,13 @@ const App = () => {
         <div className="choices">
           <input
             type="radio"
-            id="hindi"
+            id="french"
             name="language"
-            value="Hindi"
+            value="french"
             defaultChecked={formData.language}
             onChange={handleInputChange}
           />
-          <label htmlFor="hindi">Hindi</label>
+          <label htmlFor="french">french</label>
 
           <input
             type="radio"
